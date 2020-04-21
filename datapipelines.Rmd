@@ -1,0 +1,118 @@
+---
+title: "Data Pipelines"
+author: Liana Hardy
+date: 20-04-21
+output: html_notebook
+---
+
+Data pipelines use the tidyverse style of doing things (i.e. build a pipe at a time)
+```{r}
+library(tidyverse) # libraries and packages are the same things
+```
+```{r}
+# Write csv and give the file a name
+write_csv(iris, "iris.csv")
+```
+## Read, press tab to get extra functions
+```{r}
+# read_csv(name.csv, tab) gives many options
+iris_raw = read_csv("iris.csv" )
+```
+
+```{r}
+# Reading and writing to excel, downloads data in xlsx format as cannot read.
+library(readxl)
+library(writexl)
+write_xlsx(iris, "iris.xlsx")
+# Read excel file in csv.
+read_excel("iris.xlsx")
+```
+
+```{r eval=FALSE}
+library(haven)
+write_dta( iris, "iris.dta")
+read_stata("iris.dta")
+```
+# Exploratory analysis - Data explorer
+```{r eval=FALSE, tidy=TRUE}
+# above ensures 'tidy coding on output'
+# creating a report on your dataset - VERY COOL 🥳️
+DataExplorer::create_report(iris_raw, y="Species")
+```
+
+## Querying rows
+```{r}
+# Insert iris into pipes, avoids nested brackets. ctrl/comm+shift+m
+
+# View top 10 rows
+iris_raw %>% 
+  head(10)
+# View bottom 10 rows
+iris_raw %>% 
+  tail (10)
+
+# Sample a random 10
+iris_raw %>% 
+  sample_n(10) # tidyverse package required
+
+# Sample a percentage
+iris_raw %>% 
+  sample_frac(0.10)
+
+```
+## Where certain things are true?
+```{r}
+# 2 conditions species = sertosa and sepal length must be greater than 5.5
+iris_raw %>% 
+  filter(Species=="setosa", Sepal.Length > 5.5)
+
+#Not using pipeline
+filter(iris_raw, Species =="setosa", Sepal.Length > 5.5)
+  
+```
+
+```{r}
+iris_raw %>% 
+  filter(Species =="setosa", 
+         Sepal.Length < mean(Sepal.Length)) %>% 
+  filter(Sepal.Width<3)
+```
+
+```{r}
+iris_raw %>% 
+  filter((Species=="setosa" | Sepal.Length >= 5.5),
+         Sepal.Width < 3)
+```
+
+Common Criteria:
+Equal
+Less/Greater
+Not equal 
+
+TRUE - condition met
+FALSE - condition not met
+
+## Compound criteria, conditions
+```{r}
+TRUE & FALSE
+TRUE & TRUE
+
+# RULE: YELLOW & (BLUE OR RED)
+# YELLOW & PURPLE
+TRUE & ( FALSE )
+# YELLOW & RED
+TRUE & TRUE
+
+
+```
+
+## More complex filters
+```{r}
+# Filter a column if this condition is true, i.e. numeric. ~ unknown column, . is a place holder
+iris_raw %>% 
+  filter_if(is.numeric, ~ . < 5)
+# Using any values
+iris_raw %>% 
+  filter_if(is.numeric, any_vars( . <1))
+```
+
