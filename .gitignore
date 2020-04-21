@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+rstudiocloud.intror.Rcheck/
+rstudiocloud.intror*.tar.gz
+rstudiocloud.intror*.tgz
