@@ -29,3 +29,51 @@ iris
 ```
 
 The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+diameter <- 12 # assigns value 12 to variable diameter, classic way
+12 -> diameter
+diameter = 12 # easiest way to assign something, more consistent with other programming languages
+3i #complex numbers
+
+# strings of text as an object, use double speech marks as this removes the issue of using apostrophe in string of text
+
+c(
+"This is text",
+'This is also text'
+)
+
+# categorical values such as blood types, store numbers that act as Id's, this is called a factor
+
+bloodtypes <- factor(c("A+", "B+", "AB+", "A+", "O-"))
+bloodtypes
+sort(bloodtypes)
+
+```
+
+```{r}
+# Exercise 8.7 - Convert TRUE to an integer
+class(TRUE)
+as.integer(TRUE)
+class(as.integer(TRUE))
+# Answer
+TRUE
+FALSE
+as.integer(TRUE)  # better to be more specific 
+as.numeric(TRUE)
+```
+```{r}
+# Exercise 8.7 - What is the datatype of the value returned by Sys.time()?
+Sys.time()
+class(Sys.time())
+# Answer - POSIX - standard in linux
+# Exercise 8.7 - What is the datatype of the value returned by Sys.timezone()?
+Sys.timezone()
+class(Sys.timezone())
+# Correct
+```
+```{r}
+# Exercise 8.7 - Make this quote into an R string “Do you think this is a game?”, he said. “No, I think Jenga’s a game”, Archer responded.
+'"Do you think this is a game?”, he said. “No, I think Jengas a game”, Archer responded.'
+# All counts as a single field - can catch you out. A "string" is just a character variable that contains one or more characters. ... A character vector is a set of strings stored as a single object. Most R functions that work on character input are vectorised, ie they will return the appropriate value for each element in such a vector
+```
+
