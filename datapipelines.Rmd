@@ -1,8 +1,10 @@
 ---
 title: "Data Pipelines"
-author: Liana Hardy
-date: 20-04-21
-output: html_notebook
+author: "Liana Hardy"
+date: "20-04-21"
+output:
+  html_document:
+    df_print: paged
 ---
 
 Data pipelines use the tidyverse style of doing things (i.e. build a pipe at a time)
@@ -115,4 +117,29 @@ iris_raw %>%
 iris_raw %>% 
   filter_if(is.numeric, any_vars( . <1))
 ```
+
+## Exercises 20.5
+
+```{r}
+# Write a filter that gets all action movies from the movies dataset via the ggplot2movies package
+library(ggplot2movies)
+ggplot2movies::movies %>% 
+  filter(Action == 1)
+
+```
+
+
+
+```{r}
+# Write a filter that removes films lasting more than 6 hours from the movies dataset
+# Example: iris %>% filter_all(any_vars(. > 7.5))
+# Condition the column first, "filter_if(is numeric, ..). iris %>% filter_if(is.numeric, all_vars(. < mean(.)))
+ggplot2movies::movies %>% filter_if(is.numeric, all_vars(length < 360))
+```
+
+```{r}
+# Write a filter that checks to see if any of the films don’t have any genres flagged at all
+# Example: iris %>% filter_at(vars(ends_with("Length")), all_vars(. < mean(.)))
+ggplot2movies::movies %>% filter_at(vars(Action, Animation, Comedy, Drama, Documentary, Romance, Short), all_vars(. < 1))
+``` 
 
