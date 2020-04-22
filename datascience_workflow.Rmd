@@ -1,0 +1,156 @@
+---
+title: "Data Science Workflow"
+author: Liana Hardy 
+date: 20-04-22
+course: Intro to R Steph Locke
+output: html_notebook
+---
+
+Cross-industry standard process for data mining (CRISP-DM)
++ DATA UNDERSTANDING - starts with a challenge
+  How will we know that the prediction is right or wrong? 
+  e.g. predicting ice-cream sales by looking at weather forecasts as well as data provided
+  How long will it take us to find out?
+  How long have we been generating data?
+  Have any changes been made in the processing of this data? 
+  e.g. BMI to measure obesity, change to different measurement but still under the column 'obesity'
+  
++ DATA PREPARATION - cleaning data
+  How are you handling missing values
+  Adding columns/ measurements of interest
+  Anonymysing 
+  
++ DATA MODELLING
+  Competing requirements: High accuracy (prediction) & explanation
+  High accuracy - risk of 'over-fitting' of very detailed information but less explainable due to  complexity of the model
+  Explanatory - simpler models where looking for features/variables/columns that are most impactful
+  
++ EVALUATION 
+  Multiple models of best  fit
+  
++ DEPLOYMENT 
+  Protocol in action - making predictions/producing data
+  
+```{r}
+# copied from section 44. initial exploration
+library(tidyverse)
+library(AppliedPredictiveModeling)
+data(AlzheimerDisease)
+alzheimers <- predictors %>% cbind(diagnosis)
+View(alzheimers)
+```
+Common things to explore/check for:
+
+- Unusual distributions
+- Outliers
+- Missings
+- Correlations
+
+#We can get an effective view of our data using the skimr package.
+```{r}
+alzheimers %>% skimr::skim() %>% head()
+## Warning: 'skimr::skim_to_wide' is deprecated.
+## Use 'skim()' instead.
+## See help("Deprecated")
+```
+
+## Visualise the relationships between numeric variables using the original pairs() function or ggpairs() from GGally. This overview visualisation method, is good for up to maybe twenty variables before it’s really difficult to a) compute and b) visualise.  
+```{r}
+alzheimers %>% select_if(is.numeric) %>% select(1:10) %>% GGally::ggpairs(aes(alpha = 0.1))
+```
+
+## There are many packages you can use to assess data: missing data, anomolies e.g. see section 44. 
+Generating lots of charts etc can be a pain. There are some tools that can help you. The IEDA package provides an interactive exploratory data analysis shiny application that you can use to explore your data. Alternatively, or as well as, you can use the DataExplorer package and it’s create_report() function to generate a good quality report overviewing the data.
+
+```{r}
+DataExplorer::create_report(alzheimers, y = "diagnosis")
+```
+
+
+## Exercise 44.2
+Load the titanic3 dataset from the PASWR package
+Summarise the data
+If we’re trying to predict who is going to die on the titanic, which column(s) can we immediately remove from our dataset?
+
+```{r}
+library(PASWR)
+library(skimr)
+library(DataExplorer)
+library(naniar)
+library(xray)
+
+data("titanic3")
+view(titanic3)
+
+# exploratory data analysis - gain information about source data
+skim(titanic3)
+naniar::prop_miss_case(titanic3)
+xray::distributions(titanic3)
+
+
+```
+
+## Data Preparation - feature selection and engineering 
+What columns/variables can be removed?
+- body: is a measurement following the outcome that we are trying to predict. Would provide high accuracy but couldn't include this in the model. 
+- survival
+
+For example:
+Cabin ID - looks at letter and number. Could predict survival - proximity measure of where an individual was when the boat was sinking which would impact survival. 
+
+Combine parch & slbsp to uncover family size, could also remove outliers by capping the scale/variable or distribute the number different - better for a linear relationship
+
+## Sampling data - r sample package
+```{r}
+library(tidymodels)  # specifically interested in rsample
+set.seed(77887)
+
+alz_samples <- alzheimers %>% rsample::initial_split(prop = 0.7)
+
+alz_training <- alz_samples %>% training() %>% head
+```
+## Repeat observations - random sampling on IDs of patients to ensure repeat measures - not leaking 
+  
+```{r}
+alz_cv <- alzheimers %>% rsample::vfold_cv()
+alz_cv %>% pluck("splits") %>% map(as_data_frame) %>% map(~lm(diagnosis ~ ., data = .)) %>% 
+    map_df(broom::tidy, .id = "cv") %>% arrange(term) %>% slice(1:60) %>% ggplot() + 
+    aes(x = estimate) + geom_density() + facet_wrap(~term, scales = "free")
+```
+```{r}
+alz_boot <- alzheimers %>% rsample::bootstraps()
+```
+
+## Recipes - scaling variables/z-score (number of SD+/-)
+```{r}
+library(tidymodels)
+
+splits <- alzheimers %>% initial_split(0.7)
+
+train = training(splits)
+test = testing(splits)
+
+train
+test
+
+rec = recipe(train, diagnosis ~ .)
+
+rec <- rec %>% step_scale(all_numeric()) %>% step_corr(all_numeric(), threshold = 0.8)
+
+rec
+
+rec = prep(rec, train)
+rec
+
+```
+```{r}
+train_clean = bake(rec, train)
+test_clean = bake(rec, train)
+
+ncol(test_clean)
+
+```
+
+## Logistic regressions - re-read this once you are awake. Put a straight line that represents the average value for a set of criteria. Use for probability. 
+
+Creating models: lm = linear model (basic - trying to predict a continuos variable), glm = generalised linear models (perform many different types of regression)
