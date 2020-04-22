@@ -1,0 +1,113 @@
+---
+title: "Data Visualisation"
+author: Liana Hardy
+date: 2020-04-22
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+
+#aes - aesthetics - what you are presenting (data)
+# geom - geometry: shape (type of graph)
+# use '+' instead of %>% 
+
+iris %>% #add filters or aggregation here
+  ggplot() + 
+  aes(x= Sepal.Width, y=Sepal.Length, colour = Species) +
+  geom_point() -> 
+  basic_plot
+
+basic_plot
+
+# interactive plotting - html widget
+library(plotly)
+ggplotly(basic_plot)
+
+# plot is now a reusable object, can make alterations - PLOT TEMPLATES
+basic_plot + aes(x=Petal.Length, y=Petal.Width, label = Species) + geom_text()
+# geom_text() labels points
+# ggrepel
+  
+```
+
+```{r}
+iris %>% 
+  ggplot() + 
+  aes(x=Sepal.Width) +
+  geom_histogram(bins=10)
+
+```
+
+```{r}
+
+iris %>% 
+  ggplot()+
+  aes(x=Sepal.Width)+
+  geom_density()
+
+```
+
+```{r}
+iris %>% 
+  ggplot()+
+  aes(x=Species, y=Sepal.Width) +
+  geom_col()
+```
+
+```{r}
+movies %>% 
+  group_by(year) %>% 
+  summarise (n=n()) %>% 
+  ggplot() +
+  aes (x=year, y=n) +
+  geom_line()
+```
+
+# Making plots pretty
+
+```{r}
+basic_plot +
+  ggtitle("Sepal width versus Sepal length", "Scatter plot demonstrating difference by species")
+```
+```{r}
+library(ggthemes) # Make own themes using ggthemes
+
+basic_plot +
+  labs(title = "Sepal width versus Sepal length",
+       subtitle= "Scatter plot demonstrating difference by species",
+       x = "Sepal Width (cm)",
+       y = "Sepal Length (cm)") +
+  theme_fivethirtyeight()+
+  theme(legend.position = "top", legend.justification = "left") ->
+  basic_plot_themed
+ggsave("basic_.pdf", basic_plot_themed, width = 15, height=15, units="in", dpi=300)
+# Save plot as PDF output
+```
+
+
+```{r}
+# Splitting data set into species
+basic_plot +
+  facet_wrap(~Species)
+```
+
+## Exercises
+```{r}
+# Produce a facetted scatter plot for simpsons_paradox split by dataset
+# Example datasaurus_dozen %>% mutate(early = dataset < "n") %>% ggplot(aes(x, y)) + geom_point() + 
+    facet_grid(early ~ dataset)
+library(datasauRus)
+simpsons_paradox %>%
+  ggplot() +
+  aes(x,y, colour = dataset)+
+  geom_point(alpha=0.5, size=1) +
+  scale_colour_colorblind() +
+  facet_wrap(~dataset) 
+
+# Using the knowledge acquired in this section, make one of your charts look good
+# colour = , alpha = transparency, size =
+
+```
+
+Tips: Better practice to have data 'tall or long' rather than 'short and wide' - reshape the data

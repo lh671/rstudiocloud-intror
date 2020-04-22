@@ -1,0 +1,169 @@
+---
+title: "Day 1 Recap"
+author: "Liana Hardy"
+date: '2020-04-22'
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+---
+
+1. shared / cloud coding environment - good for learning but not good for personal data
+2. source control (Github) - track changes and protect origional code. Trace back errors and step back to re-start code. 
+3. Reproducible research via literate programming 
+4. R
+  + packages
+  + functions
+  + data types
+  + objects 
+  + tidyverse paradigm
+  + logic constructs
+  
+## Filter exercises 
+1. Write a filter that gets all action movies from the movies dataset via the ggplot2movies package
+1. Write a filter that removes films lasting more than 6 hours from the movies dataset
+1. [ADVANCED] Write a filter that checks to see if any of the films don’t have any genres flagged at all
+
+```{r}
+library(tidyverse)
+library(ggplot2movies)
+
+ggplot2movies::movies # Can shorten to movies
+# Always take a look at the data
+
+```
+
+```{r}
+## filter all action movies
+# action column is an integer of 0 or 1
+movies %>% 
+  filter(Action == 1)
+
+```
+
+```{r}
+# remove films longer than 6 hours - what is 6 hours in minutes - EXCLUDE
+movies %>% 
+  filter(length <=6*60) # 6 hours in minutes
+  # to check max length - summarise(max(length))
+```
+
+```{r}
+# no genres flagged
+movies %>% 
+  filter_at(vars(Action:Short), all_vars( . == 0)) ->
+  movies_nogenre
+
+movies_nogenre # here you have assigned your selection to this name using -> 
+
+```
+
+# You got 3/3 GOOD JOB!!!! Check datapipelines.Rmd for answers
+
+## Filtering or selecting columns
+```{r}
+iris %>% # include these columns
+  select(Sepal.Length, Species)
+
+iris %>% # exclude these columns
+  select(-Sepal.Length, - Species)
+
+iris %>% # select multiple columns
+  select(Sepal.Length:Petal.Width)
+
+iris %>%  # exclude multiple columns
+  select(-(Sepal.Length:Petal.Width)) # When in doubt add brackets!!
+
+iris %>% # select depending on start/end/contains
+  select(starts_with("Sepal"))
+
+iris %>% # select if a number - 
+  select_if(is.numeric)
+         
+```
+
+## Select Exercises - Section 21
+# 1. Output the movies dataset with the column budget changed to budget_if_known
+# 1. [ADVANCED] Write a query that returns from the movies dataset columns that have a high degree of missing data (more than 25% of rows are NA) and upper case all the output column names
+
+```{r}
+# output movies with renamed column
+movies %>% 
+  rename(budget_if_known = budget) ->
+  movies_cleaned
+View(movies_cleaned)
+
+movies %>% 
+  select(budger_if_known = budget, everything())
+
+```
+
+## Longer pipelines
+Show sepal details for setosa flowers
+```{r}
+iris %>% 
+  filter(Species == "setosa") %>% # Make sure criteria and reduction of information in correct order
+  select(starts_with("Sepal"))
+
+```
+
+## Changing or adding columns - using mutate
+
+```{r}
+
+iris %>% 
+  mutate(Sepal.Length = Sepal.Length - 0.1, 
+         Sepal.Area = Sepal.Length * Sepal.Width,
+         Species_trun = str_trunc(as.character(Species),3),
+         Diff.Sepal.Length = (Sepal.Length - 
+mean(Sepal.Length))/mean(Sepal.Length))
+         
+# allows change of data but Iris still holds incorrectly 
+
+```
+
+```{r}
+# Add a column to movie sthat says how much length differs from the median
+movies %>% 
+  mutate(diff_length = length - median(length)) ->
+  movies_diff
+```
+
+## Aggregating our data
+- groups = group_by
+- aggregation = summarise
+
+```{r}
+iris %>% 
+  group_by(Species) %>% 
+  summarise(count = n(), avg.Sepal.Length = mean(Sepal.Length))
+
+iris %>% 
+  group_by(Species) %>% 
+  summarise_all(mean)
+
+# Difference in a specific group
+iris %>% 
+  mutate(Diff.Sepal.Length = (Sepal.Length - mean(Sepal.Length))/mean(Sepal.Length)) %>% 
+  group_by(Species) %>% 
+  mutate(Species.Diff.Sepal.Length = (Sepal.Length - mean(Sepal.Length))/mean(Sepal.Length))
+```
+
+## Find the min and max values for length in movies
+## In a pipeline, find out what proportion of films are action, action-comedies and neither action nor comedies
+```{r}
+# movie length range
+movies %>% 
+  summarise(min(length), max(length)/60) # divide by 60 to get hours
+
+# proprotions by genre
+movies %>% 
+  group_by(Action, Comedy) %>% 
+  summarise(n=n()) %>% # summarise number of each
+  ungroup() %>% # check figures always, use ungroup to stop considering data as group so that mutate works on whole dataset (totals = 100)
+  mutate(per=n/sum(n)) # make a percentage
+#summarise(sum(per))
+
+```
+
